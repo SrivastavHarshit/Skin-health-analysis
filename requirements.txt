@@ -1,5 +1,6 @@
-streamlit
+streamlit==1.32.2
 mediapipe==0.10.9
-opencv-python-headless
-numpy
-plotly
+opencv-python-headless==4.9.0.80
+numpy==1.26.4
+plotly==5.18.0
+protobuf<4
