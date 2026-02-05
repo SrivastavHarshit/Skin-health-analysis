@@ -1,12 +1,7 @@
 streamlit==1.32.2
-
 mediapipe==0.10.32
-
 opencv-python-headless
-
 streamlit-webrtc==0.47.1
-
 numpy
 pillow
-
 protobuf<4
