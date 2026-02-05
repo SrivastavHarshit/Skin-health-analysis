@@ -3,17 +3,18 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
-from mediapipe.python.solutions.face_mesh import FaceMesh
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
 
+# Streamlit page setup
 st.set_page_config(page_title="Skin Health Analysis", layout="centered")
-
 st.title("🧴 Skin Health Analysis (Live Face Mesh)")
 
 
-# Initialize MediaPipe FaceMesh
-face_mesh = FaceMesh(
+# Initialize MediaPipe FaceMesh using official API
+mp_face_mesh = mp.solutions.face_mesh
+
+face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
     max_num_faces=1,
     refine_landmarks=True,
