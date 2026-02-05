@@ -1,26 +1,22 @@
 import streamlit as st
 import cv2
 import numpy as np
-import mediapipe as mp
 
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
-# Streamlit page setup
+
 st.set_page_config(page_title="Skin Health Analysis", layout="centered")
-st.title("🧴 Skin Health Analysis (Live Face Mesh)")
+st.title("🧴 Skin Health Analysis (Live Face Detection)")
 
 
-# Initialize MediaPipe FaceMesh using official API
-mp_face_mesh = mp.solutions.face_mesh
-
-face_mesh = mp_face_mesh.FaceMesh(
-    static_image_mode=False,
-    max_num_faces=1,
-    refine_landmarks=True,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5,
-)
+# Load MediaPipe Face Detector (Tasks API)
+base_options = python.BaseOptions(model_asset_path=None)
+options = vision.FaceDetectorOptions(base_options=base_options)
+detector = vision.FaceDetector.create_from_options(options)
 
 
 class VideoProcessor(VideoProcessorBase):
@@ -28,19 +24,18 @@ class VideoProcessor(VideoProcessorBase):
         img = frame.to_ndarray(format="bgr24")
 
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = face_mesh.process(rgb)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
 
-        if results.multi_face_landmarks:
-            for face_landmarks in results.multi_face_landmarks:
-                for lm in face_landmarks.landmark:
-                    h, w, _ = img.shape
-                    cx, cy = int(lm.x * w), int(lm.y * h)
-                    cv2.circle(img, (cx, cy), 1, (0, 255, 0), -1)
+        detection_result = detector.detect(mp_image)
+
+        if detection_result.detections:
+            for detection in detection_result.detections:
+                bbox = detection.bounding_box
+                x, y, w, h = bbox.origin_x, bbox.origin_y, bbox.width, bbox.height
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         return img
 
-
-st.subheader("Live Camera")
 
 webrtc_streamer(
     key="skin-health",
@@ -48,4 +43,4 @@ webrtc_streamer(
     media_stream_constraints={"video": True, "audio": False},
 )
 
-st.info("Allow camera access to start real-time skin analysis.")
+st.info("Allow camera access to start live detection.")
